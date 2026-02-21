@@ -1,57 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Voting System</title>
-    <style>
-        /* تصميم بسيط للتبويبات */
-        .tab {
-            display: inline-block;
-            padding: 10px 20px;
-            margin-right: 5px;
-            background-color: #f0f0f0;
-            cursor: pointer;
-            border-radius: 5px 5px 0 0;
-        }
-        .tab:hover {
-            background-color: #d0d0d0;
-        }
-        .tab-content {
-            border: 1px solid #f0f0f0;
-            padding: 20px;
-            display: none;
-        }
-        .tab-active {
-            display: block;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Electronic Voting System</title>
+<style>
+body { font-family: Arial, sans-serif; background-color: #f9f9f9; margin:0; padding:0; }
+header { background: #0052cc; color:white; padding:20px; text-align:center; }
+.navbar { display:flex; justify-content:center; margin-top:10px; }
+.navbar div { margin:0 15px; cursor:pointer; color:white; font-weight:bold; }
+.tabs { display:flex; justify-content:center; margin-top:20px; }
+.tab { padding:15px 25px; background:#e0e0e0; margin:0 5px; cursor:pointer; border-radius:8px; }
+.tab:hover { background:#d0d0d0; }
+.tab-content { display:none; padding:20px; max-width:900px; margin:20px auto; background:white; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
+.tab-active { display:block; }
+button { background:#0052cc; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:10px; }
+button:hover { background:#003d99; }
+h2 { color:#0052cc; }
+p { line-height:1.6; }
+</style>
 </head>
 <body>
-    <h1>Voting System</h1>
 
-    <!-- التبويبات -->
-    <div class="tabs">
-        <div class="tab" onclick="openTab('home')">Home</div>
-        <div class="tab" onclick="openTab('test')">Test Tab</div>
+<header>
+    <h1>Electronic Voting System</h1>
+    <div class="navbar">
+        <div onclick="openTab('create')">Create Account</div>
+        <div onclick="openTab('host')">Host Election</div>
+        <div onclick="openTab('campaign')">File for Campaign</div>
+        <div onclick="openTab('vote')">Vote</div>
+        <div onclick="openTab('results')">Results</div>
     </div>
+</header>
 
-    <!-- محتوى التبويبات -->
-    <div id="home" class="tab-content tab-active">
-        <p>Welcome to the Voting System!</p>
-    </div>
-    <div id="test" class="tab-content">
-        <p>GitHub-VSCode-Webserver link works!</p>
-    </div>
+<!-- Create Account -->
+<div id="create" class="tab-content tab-active">
+    <h2>Create Account</h2>
+    <p>Register using your National ID. A PPK file will be generated for secure anonymous voting.</p>
+    <button>Create Account</button>
+</div>
 
-    <script>
-        function openTab(tabId) {
-            // اخفي كل المحتويات
-            const contents = document.querySelectorAll('.tab-content');
-            contents.forEach(c => c.classList.remove('tab-active'));
+<!-- Host Election -->
+<div id="host" class="tab-content">
+    <h2>Host Election</h2>
+    <p>Admin panel to start elections, set candidate filing, ballot opening, and ballot closing dates. Automatically tally and verify results.</p>
+    <button>Host Election</button>
+</div>
 
-            // أظهر المحتوى المطلوب
-            document.getElementById(tabId).classList.add('tab-active');
-        }
-    </script>
+<!-- File for Campaign -->
+<div id="campaign" class="tab-content">
+    <h2>File for Campaign</h2>
+    <p>Declare your intention to run in a hosted election. Only residents of the election district can file unless it's a global election.</p>
+    <button>File Campaign</button>
+</div>
+
+<!-- Vote -->
+<div id="vote" class="tab-content">
+    <h2>Vote</h2>
+    <p>View active elections and all candidates. Cast your ballot securely using your PPK.</p>
+    <button>Vote Now</button>
+</div>
+
+<!-- Results -->
+<div id="results" class="tab-content">
+    <h2>Results</h2>
+    <p>View election results with cryptographic verification. Results are automatically tallied based on the election type (First Past the Post, Ranked Choice in future).</p>
+    <button>View Results</button>
+</div>
+
+<script>
+function openTab(tabId){
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(c => c.classList.remove('tab-active'));
+    document.getElementById(tabId).classList.add('tab-active');
+}
+</script>
+
 </body>
 </html>
