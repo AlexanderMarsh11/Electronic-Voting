@@ -1,77 +1,244 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Electronic Voting System</title>
-<style>
-body { font-family: Arial, sans-serif; background-color: #f9f9f9; margin:0; padding:0; }
-header { background: #0052cc; color:white; padding:20px; text-align:center; }
-.navbar { display:flex; justify-content:center; margin-top:10px; }
-.navbar div { margin:0 15px; cursor:pointer; color:white; font-weight:bold; }
-.tabs { display:flex; justify-content:center; margin-top:20px; }
-.tab { padding:15px 25px; background:#e0e0e0; margin:0 5px; cursor:pointer; border-radius:8px; }
-.tab:hover { background:#d0d0d0; }
-.tab-content { display:none; padding:20px; max-width:900px; margin:20px auto; background:white; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
-.tab-active { display:block; }
-button { background:#0052cc; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:10px; }
-button:hover { background:#003d99; }
-h2 { color:#0052cc; }
-p { line-height:1.6; }
-</style>
+    <meta charset="UTF-8">
+    <title>Electronic Voting System - RMU</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #f5f7fa;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #002f6c;
+            padding: 15px 40px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Sections */
+        section {
+            display: none;
+            padding: 80px 30px;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            background: linear-gradient(to right, #002f6c, #6ec1e4);
+            color: white;
+            padding: 120px 20px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            opacity: .9;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 6px;
+            border: none;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #6ec1e4;
+            color: #002f6c;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #002f6c;
+        }
+
+        /* Cards */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,.08);
+        }
+
+        .card i {
+            font-size: 40px;
+            color: #002f6c;
+            margin-bottom: 15px;
+        }
+
+        /* Forms */
+        .form-box {
+            max-width: 450px;
+            margin: auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,.1);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        footer {
+            background: #002f6c;
+            color: white;
+            text-align: center;
+            padding: 15px;
+        }
+    </style>
 </head>
+
 <body>
 
-<header>
-    <h1>Electronic Voting System</h1>
-    <div class="navbar">
-        <div onclick="openTab('create')">Create Account</div>
-        <div onclick="openTab('host')">Host Election</div>
-        <div onclick="openTab('campaign')">File for Campaign</div>
-        <div onclick="openTab('vote')">Vote</div>
-        <div onclick="openTab('results')">Results</div>
+<div class="navbar">
+    <h2>RMU E-Voting</h2>
+    <div>
+        <a onclick="show('home')">Home</a>
+        <a onclick="show('register')">Register</a>
+        <a onclick="show('login')">Login</a>
+        <a onclick="show('dashboard')">Dashboard</a>
+        <a onclick="show('admin')">Admin</a>
     </div>
-</header>
-
-<!-- Create Account -->
-<div id="create" class="tab-content tab-active">
-    <h2>Create Account</h2>
-    <p>Register using your National ID. A PPK file will be generated for secure anonymous voting.</p>
-    <button>Create Account</button>
 </div>
 
-<!-- Host Election -->
-<div id="host" class="tab-content">
-    <h2>Host Election</h2>
-    <p>Admin panel to start elections, set candidate filing, ballot opening, and ballot closing dates. Automatically tally and verify results.</p>
-    <button>Host Election</button>
-</div>
+<!-- HOME -->
+<section id="home" class="active hero">
+    <h1>Secure Electronic Voting</h1>
+    <p>Anonymous • Verifiable • Cryptographically Secure</p>
 
-<!-- File for Campaign -->
-<div id="campaign" class="tab-content">
-    <h2>File for Campaign</h2>
-    <p>Declare your intention to run in a hosted election. Only residents of the election district can file unless it's a global election.</p>
-    <button>File Campaign</button>
-</div>
+    <button class="btn btn-secondary" onclick="show('register')">Create Account</button>
+    <button class="btn btn-primary" onclick="show('login')">Login</button>
 
-<!-- Vote -->
-<div id="vote" class="tab-content">
-    <h2>Vote</h2>
-    <p>View active elections and all candidates. Cast your ballot securely using your PPK.</p>
-    <button>Vote Now</button>
-</div>
+    <div class="cards">
+        <div class="card">
+            <i class="fa-solid fa-lock"></i>
+            <h3>Secure Voting</h3>
+            <p>Asymmetric cryptography + hashing</p>
+        </div>
 
-<!-- Results -->
-<div id="results" class="tab-content">
-    <h2>Results</h2>
-    <p>View election results with cryptographic verification. Results are automatically tallied based on the election type (First Past the Post, Ranked Choice in future).</p>
-    <button>View Results</button>
-</div>
+        <div class="card">
+            <i class="fa-solid fa-user-secret"></i>
+            <h3>Anonymous</h3>
+            <p>Private key based identity</p>
+        </div>
+
+        <div class="card">
+            <i class="fa-solid fa-square-poll-vertical"></i>
+            <h3>Verifiable Results</h3>
+            <p>Hash verification & audit trail</p>
+        </div>
+    </div>
+</section>
+
+<!-- REGISTER -->
+<section id="register">
+    <div class="form-box">
+        <h2>Create Account</h2>
+        <input placeholder="National ID">
+        <input placeholder="District (Auto Assigned)" disabled>
+        <button class="btn btn-primary">Generate PPK</button>
+    </div>
+</section>
+
+<!-- LOGIN -->
+<section id="login">
+    <div class="form-box">
+        <h2>Login</h2>
+        <input placeholder="Upload PPK File">
+        <button class="btn btn-primary">Login</button>
+    </div>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dashboard">
+    <h2>User Dashboard</h2>
+    <div class="cards">
+        <div class="card">
+            <h3>Active Elections</h3>
+            <p>View & Vote</p>
+        </div>
+        <div class="card">
+            <h3>File Campaign</h3>
+            <p>Run for election</p>
+        </div>
+        <div class="card">
+            <h3>Results</h3>
+            <p>Verified tally</p>
+        </div>
+    </div>
+</section>
+
+<!-- ADMIN -->
+<section id="admin">
+    <h2>Administrator Panel</h2>
+    <div class="cards">
+        <div class="card">
+            <h3>Host Election</h3>
+            <p>Configure election timeline</p>
+        </div>
+        <div class="card">
+            <h3>Manage Candidates</h3>
+            <p>Review campaigns</p>
+        </div>
+        <div class="card">
+            <h3>Verify & Tally</h3>
+            <p>Auto verification</p>
+        </div>
+    </div>
+</section>
+
+<footer>
+    © 2026 Robert Morris University – Cybersecurity Project
+</footer>
 
 <script>
-function openTab(tabId){
-    const contents = document.querySelectorAll('.tab-content');
-    contents.forEach(c => c.classList.remove('tab-active'));
-    document.getElementById(tabId).classList.add('tab-active');
+function show(id) {
+    document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
 }
 </script>
 
