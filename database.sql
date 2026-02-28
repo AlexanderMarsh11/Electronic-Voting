@@ -1,37 +1,54 @@
-CREATE DATABASE IF NOT EXISTS electronic_voting;
-USE electronic_voting;
-
-CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    hashed_national_id CHAR(64) NOT NULL,
-    voting_district ENUM('DistrictA','DistrictB') NOT NULL,
-    public_key TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  national_id_hash CHAR(64) NOT NULL UNIQUE,
+  public_key_pem TEXT NOT NULL,
+  district CHAR(1) NOT NULL,
+  eligible TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL
 );
 
-CREATE TABLE elections (
-    election_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    election_type ENUM('FPTP','RankedChoice') DEFAULT 'FPTP',
-    start_date DATETIME NOT NULL,
-    end_date DATETIME NOT NULL,
-    is_active BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS elections (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  scope ENUM('global','district') NOT NULL,
+  district CHAR(1) NULL,
+  filing_open DATETIME NOT NULL,
+  filing_close DATETIME NOT NULL,
+  ballot_open DATETIME NOT NULL,
+  ballot_close DATETIME NOT NULL,
+  public_key_pem TEXT NOT NULL,
+  private_key_path VARCHAR(512) NOT NULL,
+  status ENUM('draft','open','closed') NOT NULL DEFAULT 'open',
+  created_at DATETIME NOT NULL
 );
 
-CREATE TABLE candidates (
-    candidate_id INT AUTO_INCREMENT PRIMARY KEY,
-    election_id INT NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    votes_received INT DEFAULT 0,
-    FOREIGN KEY (election_id) REFERENCES elections(election_id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS candidates (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  election_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  display_name VARCHAR(120) NOT NULL,
+  created_at DATETIME NOT NULL,
+  UNIQUE KEY uniq_candidate (election_id, user_id),
+  FOREIGN KEY (election_id) REFERENCES elections(id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE TABLE votes (
-    vote_id INT AUTO_INCREMENT PRIMARY KEY,
-    election_id INT NOT NULL,
-    hashed_ballot CHAR(64) NOT NULL,
-    ppk_hash CHAR(64) NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (election_id) REFERENCES elections(election_id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS votes (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  election_id BIGINT NOT NULL,
+  credential_hash BINARY(32) NOT NULL,
+  ciphertext LONGBLOB NOT NULL,
+  ballot_hash BINARY(32) NOT NULL,
+  submitted_at DATETIME NOT NULL,
+  UNIQUE KEY uniq_vote (election_id, credential_hash),
+  FOREIGN KEY (election_id) REFERENCES elections(id)
+);
+
+CREATE TABLE IF NOT EXISTS results (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  election_id BIGINT NOT NULL UNIQUE,
+  results_json JSON NOT NULL,
+  published_hashes JSON NOT NULL,
+  published_at DATETIME NOT NULL,
+  FOREIGN KEY (election_id) REFERENCES elections(id)
 );
