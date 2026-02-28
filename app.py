@@ -6,7 +6,7 @@ import datetime as dt
 from pathlib import Path
 
 import mysql.connector
-from flask import Flask, request, jsonify, abort
+from flask import Flask, request, jsonify, abort, render_template
 from dotenv import load_dotenv
 
 from cryptography.hazmat.primitives.asymmetric import rsa, padding as asym_padding
@@ -115,6 +115,10 @@ def generate_election_keypair(election_id: int):
 @app.get("/")
 def health():
     return jsonify({"status": "ok", "service": "Electronic Voting API"})
+
+@app.get("/vote")
+def vote_page():
+    return render_template("vote.html")
 
 # ---- Users ----
 @app.post("/register")
@@ -496,3 +500,4 @@ def get_results(election_id: int):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
