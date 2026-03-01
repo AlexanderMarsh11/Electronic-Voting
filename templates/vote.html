@@ -1,31 +1,37 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Secure Vote</title>
+  <title>Vote</title>
 </head>
 <body>
-  <h2>Cast Your Vote</h2>
+  <h2>Election: {{ election.title }} (ID: {{ election_id }})</h2>
+  <p>Status: {{ election.status }} | Window: {{ election.ballot_open }} → {{ election.ballot_close }}</p>
 
-  <label>Election ID:</label>
-  <input id="electionId" type="number" value="1" min="1" />
-  <br><br>
+  {% if candidates|length == 0 %}
+    <p><b>No candidates yet.</b> Ask admin to add candidates.</p>
+  {% else %}
+    <form method="POST" action="/vote">
+      <input type="hidden" name="election_id" value="{{ election_id }}" />
 
-  <label>National ID (test):</label>
-  <input id="nationalId" type="text" placeholder="e.g., 111222333" />
-  <br><br>
+      <label>National ID:</label>
+      <input name="national_id" placeholder="e.g., 111222333" required />
+      <br><br>
 
-  <label>Candidate:</label>
-  <select id="candidate">
-    <option value="Alice">Alice</option>
-    <option value="Bob">Bob</option>
-  </select>
-  <br><br>
+      <label>District (1 letter):</label>
+      <input name="district" value="A" maxlength="1" />
+      <br><br>
 
-  <button onclick="submitVote()">Encrypt & Submit Vote</button>
+      <label>Candidate:</label>
+      <select name="candidate" required>
+        {% for c in candidates %}
+          <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+      <br><br>
 
-  <pre id="status" style="margin-top:16px;"></pre>
-
-  <script src="/static/js/vote.js"></script>
+      <button type="submit">Submit Vote</button>
+    </form>
+  {% endif %}
 </body>
 </html>

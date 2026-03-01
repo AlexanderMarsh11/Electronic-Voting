@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Admin</title></head>
+<body>
+  <h2>Admin Dashboard</h2>
+  <p>Users: <b>{{ users_count }}</b> | Votes: <b>{{ votes_count }}</b></p>
+
+  <h3>Elections</h3>
+  <ul>
+    {% for e in elections %}
+      <li>
+        <b>#{{ e.id }}</b> {{ e.title }} — <b>{{ e.status }}</b>
+        ({{ e.ballot_open }} → {{ e.ballot_close }})
+
+        <form style="display:inline" method="POST" action="/admin/elections/{{ e.id }}/open?token={{ token }}">
+          <button type="submit">Open (2h)</button>
+        </form>
+
+        <form style="display:inline" method="POST" action="/admin/elections/{{ e.id }}/close?token={{ token }}">
+          <button type="submit">Close + Tally</button>
+        </form>
+
+        <a href="/admin/results/{{ e.id }}?token={{ token }}">View Results</a>
+
+        <form method="POST" action="/admin/elections/{{ e.id }}/candidates/add?token={{ token }}" style="margin-top:8px;">
+          <input name="display_name" placeholder="Add candidate name..." />
+          <button type="submit">Add Candidate</button>
+        </form>
+      </li>
+      <hr/>
+    {% endfor %}
+  </ul>
+
+  <p style="color:#666">Tip: open admin with <code>/admin?token=YOUR_ADMIN_TOKEN</code></p>
+</body>
+</html>

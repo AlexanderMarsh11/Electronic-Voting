@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Results</title></head>
+<body>
+  <h2>Results — {{ election.title }} (ID {{ election.id }})</h2>
+  <p>Status: <b>{{ election.status }}</b></p>
+
+  {% if results %}
+    <p>Published at: {{ published_at }}</p>
+    <p>Total votes: {{ results.total_votes }}</p>
+    <p>Valid votes: {{ results.valid_votes }}</p>
+    <p>Invalid votes: {{ results.invalid_votes }}</p>
+    <h3>Tally</h3>
+    <ul>
+      {% for k, v in results.tally.items() %}
+        <li>{{ k }}: <b>{{ v }}</b></li>
+      {% endfor %}
+    </ul>
+    <h3>Winner</h3>
+    <p><b>{{ results.winner }}</b></p>
+  {% else %}
+    <p><b>No results yet.</b> Close the election to publish results.</p>
+  {% endif %}
+</body>
+</html>
