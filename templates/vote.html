@@ -1,20 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Vote</title>
+  <meta charset="utf-8" />
+  <title>Secure Vote</title>
 </head>
 <body>
+  <h2>Cast Your Vote</h2>
 
-<h2>Cast Your Vote</h2>
+  <label>Election ID:</label>
+  <input id="electionId" type="number" value="1" min="1" />
+  <br><br>
 
-<select id="candidate">
+  <label>National ID (test):</label>
+  <input id="nationalId" type="text" placeholder="e.g., 111222333" />
+  <br><br>
+
+  <label>Candidate:</label>
+  <select id="candidate">
     <option value="Alice">Alice</option>
     <option value="Bob">Bob</option>
-</select>
+  </select>
+  <br><br>
 
-<button onclick="submitVote()">Vote</button>
+  <button onclick="submitVote()">Encrypt & Submit Vote</button>
 
-<script src="/static/js/vote.js"></script>
+  <pre id="status" style="margin-top:16px;"></pre>
 
+  <script src="/static/js/vote.js"></script>
 </body>
 </html>
