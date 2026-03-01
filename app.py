@@ -152,7 +152,7 @@ def admin_close_election(election_id: int):
                 tally[candidate] = tally.get(candidate, 0) + 1
             else:
                 invalid_votes += 1
-        except:
+        except Exception:
             invalid_votes += 1
 
     winner = max(tally, key=tally.get) if tally else None
@@ -165,13 +165,28 @@ def admin_close_election(election_id: int):
         "winner": winner
     }
 
+    # ✅ FIX: published_hashes is required in results table (NOT NULL)
+    # We publish SHA-256 hashes of each ciphertext for public audit/verifiability.
+    published_hashes = []
+    for r in rows:
+        try:
+            published_hashes.append(hashlib.sha256(r["ciphertext"]).hexdigest())
+        except Exception:
+            # If anything odd happens, still keep structure consistent
+            published_hashes.append(None)
+
     cur.execute("UPDATE elections SET status='closed' WHERE id=%s", (election_id,))
     cur.execute(
-        "INSERT INTO results (election_id, results_json, published_at) VALUES (%s,%s,%s)",
-        (election_id, json.dumps(results), now_utc())
+        "INSERT INTO results (election_id, results_json, published_hashes, published_at) VALUES (%s,%s,%s,%s)",
+        (election_id, json.dumps(results), json.dumps(published_hashes), now_utc())
     )
 
     return jsonify(results)
 
+# === Paste any additional routes from your original app.py below this line ===
+# (Example: admin_create_election, vote submission endpoints, etc.)
+# Make sure they remain below, unchanged, unless you want additional edits.
+
 if __name__ == "__main__":
+    # Dev only (production runs via gunicorn)
     app.run(host="0.0.0.0", port=5000)
