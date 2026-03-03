@@ -5,6 +5,12 @@
   <title>Vote</title>
 </head>
 <body>
+  <nav style="margin-bottom: 16px;">
+  <a href="/vote">🗳️ Vote</a>
+  &nbsp;|&nbsp;
+  <a href="/results/{{ election_id }}">📊 Results</a>
+</nav>
+<hr style="margin-bottom:16px;">
   <h2>Election: {{ election.title }} (ID: {{ election_id }})</h2>
   <p>Status: {{ election.status }} | Window: {{ election.ballot_open }} → {{ election.ballot_close }}</p>
 

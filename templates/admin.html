@@ -2,6 +2,14 @@
 <html>
 <head><meta charset="utf-8"><title>Admin</title></head>
 <body>
+
+<nav style="margin-bottom: 16px;">
+  <a href="/admin?token={{ token }}">🛠️ Admin</a>
+  &nbsp;|&nbsp;
+  <a href="/admin/results/1?token={{ token }}">📊 Results (Admin)</a>
+</nav>
+<hr style="margin-bottom:16px;">
+
   <h2>Admin Dashboard</h2>
   <p>Users: <b>{{ users_count }}</b> | Votes: <b>{{ votes_count }}</b></p>
 

@@ -411,5 +411,26 @@ def admin_results(election_id: int):
 
     return render_template("results.html", election=election, results=results, published_at=published_at)
 
+@app.get("/results/<int:election_id>")
+def public_results(election_id: int):
+    conn = db_conn()
+    cur = conn.cursor(dictionary=True)
+
+    cur.execute("SELECT id, title, status FROM elections WHERE id=%s", (election_id,))
+    election = cur.fetchone()
+    if not election:
+        abort(404, "Election not found")
+
+    cur.execute(
+        "SELECT results_json, published_at FROM results WHERE election_id=%s ORDER BY published_at DESC LIMIT 1",
+        (election_id,)
+    )
+    row = cur.fetchone()
+
+    results = json.loads(row["results_json"]) if row else None
+    published_at = row["published_at"] if row else None
+
+    return render_template("results.html", election=election, results=results, published_at=published_at)
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
