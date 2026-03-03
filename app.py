@@ -191,32 +191,32 @@ def vote_submit():
     if not cur.fetchone():
         abort(400, "Invalid candidate")
 
-    # User upsert
-    national_hash = hashlib.sha256(national_id.encode()).hexdigest()
+    # User upsert (kept for eligibility + candidate FK design)
+    national_hash_hex = hashlib.sha256(national_id.encode()).hexdigest()
 
     cur.execute(
         "SELECT id, eligible FROM users WHERE national_id_hash=%s",
-        (national_hash,)
+        (national_hash_hex,)
     )
     user = cur.fetchone()
 
     if not user:
-        # MVP placeholder public key (you can later replace with real keypair from browser)
         placeholder_pub = "-----BEGIN PUBLIC KEY-----\nPLACEHOLDER\n-----END PUBLIC KEY-----"
         cur.execute(
             "INSERT INTO users (national_id_hash, public_key_pem, district, eligible, created_at) VALUES (%s,%s,%s,1,%s)",
-            (national_hash, placeholder_pub, district, now)
+            (national_hash_hex, placeholder_pub, district, now)
         )
-        user_id = cur.lastrowid
     else:
-        user_id = user["id"]
         if not user["eligible"]:
             abort(403, "User not eligible")
 
-    # Prevent double voting (MVP)
+    # ✅ votes table uses credential_hash (BINARY(32)) not user_id
+    credential_hash = hashlib.sha256(national_id.encode()).digest()
+
+    # Prevent double voting (one credential per election)
     cur.execute(
-        "SELECT 1 FROM votes WHERE election_id=%s AND user_id=%s",
-        (election_id, user_id)
+        "SELECT 1 FROM votes WHERE election_id=%s AND credential_hash=%s",
+        (election_id, credential_hash)
     )
     if cur.fetchone():
         abort(400, "User already voted")
@@ -228,10 +228,12 @@ def vote_submit():
     pubkey = load_election_public_key(election["public_key_pem"])
     bundle = encrypt_vote_bundle(plaintext, pubkey)
 
-    # Store vote
+    ballot_hash = hashlib.sha256(bundle).digest()
+
+    # ✅ Store vote with your actual schema
     cur.execute(
-        "INSERT INTO votes (election_id, user_id, ciphertext, created_at) VALUES (%s,%s,%s,%s)",
-        (election_id, user_id, bundle, now)
+        "INSERT INTO votes (election_id, credential_hash, ciphertext, ballot_hash, submitted_at) VALUES (%s,%s,%s,%s,%s)",
+        (election_id, credential_hash, bundle, ballot_hash, now)
     )
 
     return render_template("vote_done.html", election_id=election_id)
@@ -270,7 +272,6 @@ def admin_open_election(election_id: int):
     conn = db_conn()
     cur = conn.cursor(dictionary=True)
 
-    # Open voting window for next 2 hours
     cur.execute(
         "UPDATE elections SET status='open', ballot_open=%s, ballot_close=%s WHERE id=%s",
         (now_utc() - dt.timedelta(hours=1), now_utc() + dt.timedelta(hours=2), election_id)
@@ -303,7 +304,6 @@ def admin_add_candidate(election_id: int):
     else:
         user_id = u["id"]
 
-    # Insert candidate
     cur.execute(
         "INSERT INTO candidates (election_id, user_id, display_name, created_at) VALUES (%s,%s,%s,%s)",
         (election_id, user_id, display_name, now_utc())
@@ -364,7 +364,6 @@ def admin_close_election(election_id: int):
         "winner": winner
     }
 
-    # Required column: published_hashes (NOT NULL)
     published_hashes = [hashlib.sha256(r["ciphertext"]).hexdigest() for r in rows]
 
     cur.execute("UPDATE elections SET status='closed' WHERE id=%s", (election_id,))
