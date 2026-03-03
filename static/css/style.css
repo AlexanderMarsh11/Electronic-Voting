@@ -131,6 +131,10 @@ body{
   color: var(--text);
   outline:none;
 }
+.select option{
+  background-color: #ffffff;
+  color: #000000;
+}
 .input:focus, .select:focus{
   border-color: rgba(110,168,255,.55);
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.14);
