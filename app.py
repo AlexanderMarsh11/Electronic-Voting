@@ -133,26 +133,56 @@ def health():
 # -------------------------
 @app.get("/vote")
 def vote_page():
-    election_id = int(request.args.get("election_id", "1"))
-
     conn = db_conn()
     cur = conn.cursor(dictionary=True)
 
+    # Fetch all elections (newest first)
+    cur.execute(
+        "SELECT id, title, status, ballot_open, ballot_close FROM elections ORDER BY id DESC"
+    )
+    elections = cur.fetchall()
+
+    if not elections:
+        abort(404, "No elections found")
+
+    # If the user did not select an election_id,
+    # automatically choose the most recent OPEN election.
+    # If none are open, choose the most recent election.
+    election_id_arg = request.args.get("election_id")
+
+    if election_id_arg:
+        try:
+            election_id = int(election_id_arg)
+        except ValueError:
+            abort(400, "Invalid election_id")
+    else:
+        open_ids = [e["id"] for e in elections if e["status"] == "open"]
+        election_id = open_ids[0] if open_ids else elections[0]["id"]
+
+    # Load the selected election details
     cur.execute(
         "SELECT id, title, status, ballot_open, ballot_close FROM elections WHERE id=%s",
         (election_id,)
     )
     election = cur.fetchone()
+
     if not election:
         abort(404, "Election not found")
 
+    # Fetch candidates for the selected election
     cur.execute(
         "SELECT display_name FROM candidates WHERE election_id=%s ORDER BY id",
         (election_id,)
     )
     candidates = [r["display_name"] for r in cur.fetchall()]
 
-    return render_template("vote.html", election=election, election_id=election_id, candidates=candidates)
+    return render_template(
+        "vote.html",
+        election=election,
+        election_id=election_id,
+        elections=elections,   # Used for the election dropdown menu
+        candidates=candidates
+    )
 
 @app.post("/vote")
 def vote_submit():
