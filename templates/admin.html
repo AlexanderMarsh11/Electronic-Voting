@@ -10,8 +10,11 @@
   <header class="topbar">
     <div class="container topbar__inner">
       <div class="brand">
-        <div class="brand__logo">🛠️</div>
-        <div>
+        <div class="brand__logo">
+  <img src="{{ url_for('static', filename='img/admin_icon.png') }}" 
+       alt="Logo" 
+       class="logo-img">
+</div>
           <div class="brand__title">Admin Dashboard</div>
           <div class="brand__sub">Create, open/close elections, manage candidates</div>
         </div>

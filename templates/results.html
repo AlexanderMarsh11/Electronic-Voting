@@ -7,22 +7,26 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <header class="topbar">
-    <div class="container topbar__inner">
-      <div class="brand">
-        <div class="brand__logo">📊</div>
-        <div>
-          <div class="brand__title">Results</div>
-          <div class="brand__sub">Choose an election to view results</div>
-        </div>
+ <header class="topbar"> 
+  <div class="container topbar__inner">
+    <div class="brand">
+      <div class="brand__logo">
+        <img src="{{ url_for('static', filename='img/results_icon.png') }}"
+             alt="Results Logo"
+             class="logo-img">
       </div>
-      <nav class="nav">
-        <a class="nav__link" href="/vote?election_id={{ selected_id or 1 }}">Vote</a>
-        <a class="nav__link nav__link--active" href="/results/{{ selected_id or 1 }}">Results</a>
-        <a class="nav__link" href="/">Home</a>
-      </nav>
+      <div>
+        <div class="brand__title">Results</div>
+        <div class="brand__sub">Choose an election to view results</div>
+      </div>
     </div>
-  </header>
+    <nav class="nav">
+      <a class="nav__link" href="/vote?election_id={{ selected_id or 1 }}">Vote</a>
+      <a class="nav__link nav__link--active" href="/results/{{ selected_id or 1 }}">Results</a>
+      <a class="nav__link" href="/">Home</a>
+    </nav>
+  </div>
+</header>
 
   <main class="container">
     <section class="card">

@@ -11,7 +11,11 @@
   <header class="topbar">
     <div class="container topbar__inner">
       <div class="brand">
-        <div class="brand__logo">🗳️</div>
+        <div class="brand__logo">
+  <img src="{{ url_for('static', filename='img/voting_icon.png') }}"
+       alt="Voting Logo"
+       class="logo-img">
+</div>
         <div>
           <div class="brand__title">Vote</div>
           <div class="brand__sub">Select an election then submit your ballot</div>
@@ -63,7 +67,7 @@
           </div>
 
           <div class="hint">
-            <!-- English notes -->
+           
             If the election is not open, the server will reject the vote with "Election is not open".
           </div>
         </div>
@@ -73,7 +77,11 @@
 
           {% if candidates|length == 0 %}
             <div class="empty">
-              <div class="empty__icon">🚫</div>
+              <div class="empty__icon">
+  <img src="{{ url_for('static', filename='img/empty_icon.png') }}"
+       alt="Empty"
+       class="empty-img">
+</div>
               <div class="empty__title">No candidates yet</div>
               <div class="empty__text">Ask admin to add candidates for this election.</div>
             </div>
@@ -97,7 +105,7 @@
               <button class="btn btn--primary" type="submit">Submit Vote</button>
 
               <div class="hint">
-                <!-- English notes -->
+               
                 One vote per (National ID + Election). Duplicate voting is blocked by credential_hash.
               </div>
             </form>

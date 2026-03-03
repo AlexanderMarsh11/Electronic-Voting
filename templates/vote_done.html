@@ -10,7 +10,11 @@
   <header class="topbar">
     <div class="container topbar__inner">
       <div class="brand">
-        <div class="brand__logo">✅</div>
+        <div class="brand__logo">
+  <img src="{{ url_for('static', filename='img/brand_icon.png') }}"
+       alt="Brand Logo"
+       class="logo-img">
+</div>
         <div>
           <div class="brand__title">Vote Submitted</div>
           <div class="brand__sub">Thank you</div>

@@ -1,7 +1,4 @@
-/* English notes:
-   Minimal, clean UI for a university demo.
-   No frameworks; pure CSS.
-*/
+
 
 :root{
   --bg:#0b1020;
@@ -31,6 +28,11 @@ body{
   width:min(1100px, 92vw);
   margin: 0 auto;
   padding: 24px 0;
+}
+
+.logo-img {
+  height: 40px;
+  width: auto;
 }
 
 .topbar{
