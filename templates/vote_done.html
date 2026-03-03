@@ -1,15 +1,45 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8"><title>Vote Submitted</title></head>
+<head>
+  <meta charset="utf-8" />
+  <title>Vote Submitted</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
 <body>
-<nav style="margin-bottom: 16px;">
-  <a href="/vote?election_id={{ election_id }}">🗳️ Back to Vote</a>
-  &nbsp;|&nbsp;
-  <a href="/results/{{ election_id }}">📊 View Results</a>
-</nav>
-<hr style="margin-bottom:16px;">
-  <h2>✅ Vote submitted</h2>
-  <p>Thanks! Your vote has been recorded.</p>
-  <a href="/vote?election_id={{ election_id }}">Back</a>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">✅</div>
+        <div>
+          <div class="brand__title">Vote Submitted</div>
+          <div class="brand__sub">Thank you</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a class="nav__link" href="/vote">Vote</a>
+        <a class="nav__link" href="/results/{{ election_id }}">Results</a>
+        <a class="nav__link" href="/">Home</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="empty">
+        <div class="empty__icon">🎉</div>
+        <div class="empty__title">Your ballot has been stored</div>
+        <div class="empty__text">
+          Election ID: <b>{{ election_id }}</b>. Results will show after the admin closes the election.
+        </div>
+        <div class="row">
+          <a class="btn" href="/vote?election_id={{ election_id }}">Back to Vote</a>
+          <a class="btn btn--primary" href="/results/{{ election_id }}">View Results</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

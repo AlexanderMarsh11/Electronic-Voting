@@ -1,53 +1,142 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8"><title>Results</title></head>
+<head>
+  <meta charset="utf-8" />
+  <title>Results</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
 <body>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">📊</div>
+        <div>
+          <div class="brand__title">Results</div>
+          <div class="brand__sub">Choose an election to view results</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a class="nav__link" href="/vote?election_id={{ selected_id or 1 }}">Vote</a>
+        <a class="nav__link nav__link--active" href="/results/{{ selected_id or 1 }}">Results</a>
+        <a class="nav__link" href="/">Home</a>
+      </nav>
+    </div>
+  </header>
 
-    <nav style="margin-bottom: 16px;">
-  <a href="/admin?token={{ token }}&election_id={{ selected_id }}">🛠️ Admin</a>
-  &nbsp;|&nbsp;
-  <a href="/admin/results/{{ selected_id }}?token={{ token }}">📊 Results</a>
-  &nbsp;|&nbsp;
-  <a href="/vote?election_id={{ selected_id }}">🗳️ Vote Page</a>
-</nav>
+  <main class="container">
+    <section class="card">
+      <div class="row row--space">
+        <div>
+          <h1 class="h1">Election Results</h1>
+          <p class="muted">If results are missing, the election may not be closed yet.</p>
+        </div>
 
-<hr style="margin-bottom:16px;">
+        <div class="row">
+          <label class="label">Select Election</label>
+          <select class="select" id="resultsElectionSelect">
+            {% for e in elections %}
+              <option value="{{ e.id }}" {% if e.id == selected_id %}selected{% endif %}>
+                #{{ e.id }} — {{ e.title }} ({{ e.status }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
 
-<label><b>Select election:</b></label>
-<select onchange="window.location.href='/admin/results/' + this.value + '?token={{ token }}'">
-  {% for e in elections %}
-    <option value="{{ e.id }}" {% if e.id == selected_id %}selected{% endif %}>
-      #{{ e.id }} - {{ e.title }} ({{ e.status }})
-    </option>
-  {% endfor %}
-</select>
+      <div class="divider"></div>
 
-<hr style="margin:16px 0;">
+      <div class="grid grid--2">
+        <div class="card card--soft">
+          <h2 class="h2">Election</h2>
+          <div class="kv">
+            <div class="kv__k">Title</div><div class="kv__v">{{ election.title }}</div>
+            <div class="kv__k">ID</div><div class="kv__v">{{ selected_id }}</div>
+            <div class="kv__k">Status</div>
+            <div class="kv__v"><span class="pill pill--{{ election.status }}">{{ election.status }}</span></div>
+            <div class="kv__k">Published</div><div class="kv__v">{{ published_at or "—" }}</div>
+          </div>
+        </div>
 
-<nav style="margin-bottom: 16px;">
-  <a href="/results?election_id={{ election_id }}">📊 Results</a>
-  &nbsp;|&nbsp;
-  <a href="/results/{{ election.id }}">📊 Results</a>
-</nav>
-<hr style="margin-bottom:16px;">
-  <h2>Results — {{ election.title }} (ID {{ election.id }})</h2>
-  <p>Status: <b>{{ election.status }}</b></p>
+        <div class="card card--soft">
+          <h2 class="h2">Summary</h2>
 
-  {% if results %}
-    <p>Published at: {{ published_at }}</p>
-    <p>Total votes: {{ results.total_votes }}</p>
-    <p>Valid votes: {{ results.valid_votes }}</p>
-    <p>Invalid votes: {{ results.invalid_votes }}</p>
-    <h3>Tally</h3>
-    <ul>
-      {% for k, v in results.tally.items() %}
-        <li>{{ k }}: <b>{{ v }}</b></li>
-      {% endfor %}
-    </ul>
-    <h3>Winner</h3>
-    <p><b>{{ results.winner }}</b></p>
-  {% else %}
-    <p><b>No results yet.</b> Close the election to publish results.</p>
-  {% endif %}
+          {% if results %}
+            <div class="stats">
+              <div class="stat">
+                <div class="stat__k">Total votes</div>
+                <div class="stat__v">{{ results.total_votes }}</div>
+              </div>
+              <div class="stat">
+                <div class="stat__k">Valid votes</div>
+                <div class="stat__v">{{ results.valid_votes }}</div>
+              </div>
+              <div class="stat">
+                <div class="stat__k">Invalid votes</div>
+                <div class="stat__v">{{ results.invalid_votes }}</div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <h3 class="h3">Tally</h3>
+            {% if results.tally and results.tally|length > 0 %}
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Candidate</th>
+                    <th class="right">Votes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for name, count in results.tally.items() %}
+                    <tr>
+                      <td>{{ name }}</td>
+                      <td class="right"><b>{{ count }}</b></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              <p class="muted">No tally available.</p>
+            {% endif %}
+
+            <div class="divider"></div>
+
+            <h3 class="h3">Winner</h3>
+            <div class="winner">
+              <div class="winner__icon">🏆</div>
+              <div>
+                <div class="winner__name">{{ results.winner or "None" }}</div>
+                <div class="muted">Winner is based on highest tally count.</div>
+              </div>
+            </div>
+          {% else %}
+            <div class="empty">
+              <div class="empty__icon">⏳</div>
+              <div class="empty__title">No published results yet</div>
+              <div class="empty__text">
+                Admin must close the election to publish results.
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script>
+    // English notes:
+    // Switch results page by redirecting to /results/<id>.
+    (function () {
+      const sel = document.getElementById('resultsElectionSelect');
+      if (!sel) return;
+      sel.addEventListener('change', function () {
+        const id = sel.value;
+        window.location.href = `/results/${encodeURIComponent(id)}`;
+      });
+    })();
+  </script>
 </body>
 </html>

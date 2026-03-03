@@ -495,14 +495,26 @@ def admin_results(election_id: int):
 
 @app.get("/results/<int:election_id>")
 def public_results(election_id: int):
+    """
+    English note:
+    - Single results page for both admin and public.
+    - Shows published results only (stored in results table).
+    - If election is not closed OR results row does not exist, show "Not published yet".
+    """
     conn = db_conn()
     cur = conn.cursor(dictionary=True)
 
+    # List of elections for the dropdown
+    cur.execute("SELECT id, title, status FROM elections ORDER BY id DESC")
+    elections = cur.fetchall()
+
+    # Selected election info
     cur.execute("SELECT id, title, status FROM elections WHERE id=%s", (election_id,))
     election = cur.fetchone()
     if not election:
         abort(404, "Election not found")
 
+    # Latest published snapshot (if any)
     cur.execute(
         "SELECT results_json, published_at FROM results WHERE election_id=%s ORDER BY published_at DESC LIMIT 1",
         (election_id,)
@@ -512,7 +524,19 @@ def public_results(election_id: int):
     results = json.loads(row["results_json"]) if row else None
     published_at = row["published_at"] if row else None
 
-    return render_template("results.html", election=election, results=results, published_at=published_at)
+    # Not published unless election is closed AND we have a results row
+    not_published = (election["status"] != "closed") or (results is None)
+
+    return render_template(
+        "results.html",
+        elections=elections,
+        election=election,
+        election_id=election_id,
+        results=results,
+        published_at=published_at,
+        not_published=not_published
+    )
+
 
 @app.post("/admin/elections/create")
 def admin_create_election():
@@ -564,47 +588,33 @@ def admin_create_election():
     return redirect(url_for("admin_page", token=token, election_id=election_id))
 
 @app.get("/results")
-def results_picker():
-    election_id = request.args.get("election_id")
-
+def results_index():
+    """
+    English note:
+    - Convenience endpoint.
+    - Redirects to a specific election results page.
+    - If election_id is missing, it redirects to the most recent election.
+    """
     conn = db_conn()
     cur = conn.cursor(dictionary=True)
 
-    # list elections for dropdown
-    cur.execute("SELECT id, title, status FROM elections ORDER BY id DESC")
-    elections = cur.fetchall()
+    # If user provided election_id in query, use it. Otherwise default to latest election.
+    election_id_arg = request.args.get("election_id")
 
-    # default election = latest if not provided
-    if not election_id and elections:
-        election_id = str(elections[0]["id"])
+    if election_id_arg:
+        try:
+            election_id = int(election_id_arg)
+        except ValueError:
+            abort(400, "Invalid election_id")
+    else:
+        cur.execute("SELECT id FROM elections ORDER BY id DESC LIMIT 1")
+        latest = cur.fetchone()
+        if not latest:
+            abort(404, "No elections found")
+        election_id = int(latest["id"])
 
-    if not election_id:
-        return render_template("results_public.html", elections=[], election=None, results=None, published_at=None)
+    return redirect(url_for("public_results", election_id=election_id))
 
-    election_id_int = int(election_id)
-
-    cur.execute("SELECT id, title, status FROM elections WHERE id=%s", (election_id_int,))
-    election = cur.fetchone()
-    if not election:
-        abort(404, "Election not found")
-
-    cur.execute(
-        "SELECT results_json, published_at FROM results WHERE election_id=%s ORDER BY published_at DESC LIMIT 1",
-        (election_id_int,)
-    )
-    row = cur.fetchone()
-
-    results = json.loads(row["results_json"]) if row else None
-    published_at = row["published_at"] if row else None
-
-    return render_template(
-        "results_public.html",
-        elections=elections,
-        election=election,
-        results=results,
-        published_at=published_at,
-        selected_election_id=election_id_int,
-    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

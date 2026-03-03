@@ -1,98 +1,191 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">🛠️</div>
+        <div>
+          <div class="brand__title">Admin Dashboard</div>
+          <div class="brand__sub">Create, open/close elections, manage candidates</div>
+        </div>
+      </div>
 
-<nav style="margin-bottom: 16px;">
-  <a href="/admin?token={{ token }}{% if selected_id %}&election_id={{ selected_id }}{% endif %}">🛠️ Admin</a>
-  {% if selected_id %}
-    &nbsp;|&nbsp;
-    <a href="/admin/results/{{ selected_id }}?token={{ token }}">📊 Results (Admin)</a>
-    &nbsp;|&nbsp;
-    <a href="/results/{{ selected_id }}">🌐 Public Results</a>
-  {% endif %}
-</nav>
-<hr style="margin-bottom:16px;">
+      <nav class="nav">
+        <a class="nav__link nav__link--active" href="/admin?token={{ token }}{% if selected_id %}&election_id={{ selected_id }}{% endif %}">Admin</a>
+        {% if selected_id %}
+          <a class="nav__link" href="/results/{{ selected_id }}">Results</a>
+          <a class="nav__link" href="/vote?election_id={{ selected_id }}">Vote</a>
+        {% endif %}
+        <a class="nav__link" href="/">Home</a>
+      </nav>
+    </div>
+  </header>
 
-<h2>Admin Dashboard</h2>
-<p>Users: <b>{{ users_count }}</b> | Votes: <b>{{ votes_count }}</b></p>
+  <main class="container">
+    <section class="card">
+      <div class="row row--space">
+        <div>
+          <h1 class="h1">Control Panel</h1>
+          <p class="muted">Token-protected admin panel.</p>
+        </div>
+        <div class="stats stats--mini">
+          <div class="stat">
+            <div class="stat__k">Users</div>
+            <div class="stat__v">{{ users_count }}</div>
+          </div>
+          <div class="stat">
+            <div class="stat__k">Votes</div>
+            <div class="stat__v">{{ votes_count }}</div>
+          </div>
+        </div>
+      </div>
 
-<h3>Create New Election</h3>
-<form method="POST" action="/admin/elections/create?token={{ token }}" style="margin-bottom:18px;">
-  <input type="text" name="title" placeholder="Election title" required>
-  <select name="scope">
-    <option value="global">global</option>
-    <option value="district">district</option>
-  </select>
-  <input type="text" name="district" placeholder="District (A)" maxlength="1">
-  <button type="submit">Create</button>
-</form>
+      <div class="divider"></div>
 
-<h3>Select Election</h3>
-<form method="GET" action="/admin" style="margin-bottom:18px;">
-  <input type="hidden" name="token" value="{{ token }}">
-  <select name="election_id" onchange="this.form.submit()">
-    {% for e in elections %}
-      <option value="{{ e.id }}" {% if e.id == selected_id %}selected{% endif %}>
-        #{{ e.id }} - {{ e.title }} ({{ e.status }})
-      </option>
-    {% endfor %}
-  </select>
-  <noscript><button type="submit">Go</button></noscript>
-</form>
+      <div class="grid grid--2">
+        <div class="card card--soft">
+          <h2 class="h2">Create New Election</h2>
+          <form method="POST" action="/admin/elections/create?token={{ token }}" class="form">
+            <label class="label">Election title</label>
+            <input class="input" type="text" name="title" placeholder="e.g., Student Council 2026" required>
 
-{% if selected_election %}
-  <h3>Selected: #{{ selected_election.id }} - {{ selected_election.title }}</h3>
-  <p>Status: <b>{{ selected_election.status }}</b></p>
-  <p>Ballot: {{ selected_election.ballot_open }} → {{ selected_election.ballot_close }}</p>
+            <label class="label">Scope</label>
+            <select class="select" name="scope">
+              <option value="global">global</option>
+              <option value="district">district</option>
+            </select>
 
-  <div style="margin: 12px 0;">
-    <form method="POST" action="/admin/elections/{{ selected_election.id }}/open?token={{ token }}" style="display:inline;">
-      <button type="submit">Open (2h)</button>
-    </form>
+            <label class="label">District (optional)</label>
+            <input class="input" type="text" name="district" placeholder="A" maxlength="1">
 
-    <form method="POST" action="/admin/elections/{{ selected_election.id }}/close?token={{ token }}" style="display:inline;">
-      <button type="submit">Close</button>
-    </form>
+            <button class="btn btn--primary" type="submit">Create</button>
 
-    <form method="POST" action="/admin/elections/{{ selected_election.id }}/close?force=1&token={{ token }}" style="display:inline;">
-      <button type="submit">Force Recalculate</button>
-    </form>
+            <div class="hint">
+              <!-- English notes -->
+              New elections typically start as <b>draft</b>. Add candidates, then Open to allow voting.
+            </div>
+          </form>
+        </div>
 
-    <a href="/admin/results/{{ selected_election.id }}?token={{ token }}" style="margin-left:10px;">View Results</a>
-  </div>
+        <div class="card card--soft">
+          <h2 class="h2">Select Election</h2>
 
-  <h4>Add Candidate</h4>
-  <form method="POST" action="/admin/elections/{{ selected_election.id }}/candidates/add?token={{ token }}" style="margin-bottom:16px;">
-    <input type="text" name="display_name" placeholder="Candidate name" required>
-    <button type="submit">Add</button>
-  </form>
+          {% if elections and elections|length > 0 %}
+            <form method="GET" action="/admin" class="form">
+              <input type="hidden" name="token" value="{{ token }}">
+              <label class="label">Election</label>
+              <select class="select" name="election_id" onchange="this.form.submit()">
+                {% for e in elections %}
+                  <option value="{{ e.id }}" {% if e.id == selected_id %}selected{% endif %}>
+                    #{{ e.id }} — {{ e.title }} ({{ e.status }})
+                  </option>
+                {% endfor %}
+              </select>
+              <noscript><button class="btn" type="submit">Go</button></noscript>
+            </form>
+          {% else %}
+            <div class="empty">
+              <div class="empty__icon">🗂️</div>
+              <div class="empty__title">No elections found</div>
+              <div class="empty__text">Create one from the left panel.</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
 
-  <h4>Candidates</h4>
-  {% if candidates and candidates|length > 0 %}
-    <ul>
-      {% for c in candidates %}
-        <li>#{{ c.id }} - {{ c.display_name }}</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No candidates yet.</p>
-  {% endif %}
+      {% if selected_election %}
+        <div class="divider"></div>
 
-  <h4>Latest Results Snapshot</h4>
-  {% if latest_results %}
-    <p><b>Published at:</b> {{ latest_published_at }}</p>
-    <pre style="white-space:pre-wrap;">{{ latest_results | tojson(indent=2) }}</pre>
-  {% else %}
-    <p>No results published yet.</p>
-  {% endif %}
-{% else %}
-  <p>No elections found. Create one above.</p>
-{% endif %}
+        <section class="card card--soft">
+          <div class="row row--space">
+            <div>
+              <h2 class="h2">Selected Election</h2>
+              <p class="muted">
+                <b>#{{ selected_election.id }}</b> — {{ selected_election.title }}
+              </p>
+            </div>
+            <div class="row">
+              <span class="pill pill--{{ selected_election.status }}">{{ selected_election.status }}</span>
+            </div>
+          </div>
 
-<p style="color:#666">Tip: open admin with <code>/admin?token=YOUR_ADMIN_TOKEN</code></p>
+          <div class="kv">
+            <div class="kv__k">Ballot window</div>
+            <div class="kv__v">{{ selected_election.ballot_open }} → {{ selected_election.ballot_close }}</div>
+          </div>
+
+          <div class="row">
+            <form method="POST" action="/admin/elections/{{ selected_election.id }}/open?token={{ token }}" style="display:inline;">
+              <button class="btn btn--primary" type="submit">Open (2h)</button>
+            </form>
+
+            <form method="POST" action="/admin/elections/{{ selected_election.id }}/close?token={{ token }}" style="display:inline;">
+              <button class="btn" type="submit">Close</button>
+            </form>
+
+            <form method="POST" action="/admin/elections/{{ selected_election.id }}/close?force=1&token={{ token }}" style="display:inline;">
+              <button class="btn btn--danger" type="submit">Force Recalculate</button>
+            </form>
+
+            <a class="btn btn--ghost" href="/results/{{ selected_election.id }}">View Results</a>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="grid grid--2">
+            <div>
+              <h3 class="h3">Add Candidate</h3>
+              <form method="POST" action="/admin/elections/{{ selected_election.id }}/candidates/add?token={{ token }}" class="row">
+                <input class="input" type="text" name="display_name" placeholder="Candidate name" required>
+                <button class="btn" type="submit">Add</button>
+              </form>
+
+              <div class="hint">
+                <!-- English notes -->
+                Candidates are attached to the selected election. Voters will see them in the Vote page dropdown.
+              </div>
+            </div>
+
+            <div>
+              <h3 class="h3">Candidates</h3>
+              {% if candidates and candidates|length > 0 %}
+                <ul class="list">
+                  {% for c in candidates %}
+                    <li class="list__item">#{{ c.id }} — <b>{{ c.display_name }}</b></li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="muted">No candidates yet.</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <h3 class="h3">Latest Results Snapshot</h3>
+          {% if latest_results %}
+            <p class="muted">Published at: <b>{{ latest_published_at }}</b></p>
+            <pre class="code">{{ latest_results | tojson(indent=2) }}</pre>
+          {% else %}
+            <p class="muted">No results published yet.</p>
+          {% endif %}
+        </section>
+      {% endif %}
+
+      <div class="hint">
+        <!-- English notes -->
+        Tip: open admin with <code>/admin?token=YOUR_ADMIN_TOKEN</code>.
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

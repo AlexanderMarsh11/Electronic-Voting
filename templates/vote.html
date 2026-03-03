@@ -3,65 +3,111 @@
 <head>
   <meta charset="utf-8" />
   <title>Vote</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">🗳️</div>
+        <div>
+          <div class="brand__title">Vote</div>
+          <div class="brand__sub">Select an election then submit your ballot</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a class="nav__link nav__link--active" href="/vote">Vote</a>
+        <!-- Results link updates by JS when election changes -->
+        <a class="nav__link" id="resultsLink" href="/results/{{ selected_id or 1 }}">Results</a>
+        <a class="nav__link" href="/">Home</a>
+      </nav>
+    </div>
+  </header>
 
-  <!-- Public Navigation -->
-  <nav style="margin-bottom: 16px;">
-    <a href="/vote">🗳️ Vote</a>
-    &nbsp;|&nbsp;
-    <a href="/results/{{ election_id }}">📊 Results</a>
-  </nav>
-  <hr style="margin-bottom:16px;">
+  <main class="container">
+    <section class="card">
+      <div class="row row--space">
+        <div>
+          <h1 class="h1">Cast Your Vote</h1>
+          <p class="muted">Your vote is encrypted on the server for this demo.</p>
+        </div>
 
-  <!-- Election Selector -->
-  <form method="GET" action="/vote" style="margin-bottom:12px;">
-    <label><b>Select Election:</b></label>
-    <select name="election_id" onchange="this.form.submit()">
-      {% for e in elections %}
-        <option value="{{ e.id }}" {% if e.id == election_id %}selected{% endif %}>
-          #{{ e.id }} - {{ e.title }} ({{ e.status }})
-        </option>
-      {% endfor %}
-    </select>
-    <noscript><button type="submit">Go</button></noscript>
-  </form>
+        <div class="row">
+          <label class="label">Select Election</label>
+          <select class="select" id="electionSelect">
+            {% for e in elections %}
+              <option value="{{ e.id }}" {% if e.id == selected_id %}selected{% endif %}>
+                #{{ e.id }} — {{ e.title }} ({{ e.status }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
 
-  <h2>
-    Election: {{ election.title }} (ID: {{ election_id }})
-  </h2>
+      <div class="divider"></div>
 
-  <p>
-    Status: {{ election.status }} |
-    Window: {{ election.ballot_open }} → {{ election.ballot_close }}
-  </p>
+      <div class="grid grid--2">
+        <div class="card card--soft">
+          <h2 class="h2">Election</h2>
+          <div class="kv">
+            <div class="kv__k">Title</div><div class="kv__v">{{ election.title }}</div>
+            <div class="kv__k">ID</div><div class="kv__v">{{ selected_id }}</div>
+            <div class="kv__k">Status</div>
+            <div class="kv__v">
+              <span class="pill pill--{{ election.status }}">{{ election.status }}</span>
+            </div>
+            <div class="kv__k">Window</div>
+            <div class="kv__v">{{ election.ballot_open }} → {{ election.ballot_close }}</div>
+          </div>
 
-  {% if candidates|length == 0 %}
-    <p><b>No candidates yet.</b> Ask admin to add candidates.</p>
-  {% else %}
-    <form method="POST" action="/vote">
-      <!-- Keep selected election when submitting vote -->
-      <input type="hidden" name="election_id" value="{{ election_id }}" />
+          <div class="hint">
+            <!-- English notes -->
+            If the election is not open, the server will reject the vote with "Election is not open".
+          </div>
+        </div>
 
-      <label>National ID:</label>
-      <input name="national_id" placeholder="e.g., 111222333" required />
-      <br><br>
+        <div class="card card--soft">
+          <h2 class="h2">Ballot</h2>
 
-      <label>District (1 letter):</label>
-      <input name="district" value="A" maxlength="1" />
-      <br><br>
+          {% if candidates|length == 0 %}
+            <div class="empty">
+              <div class="empty__icon">🚫</div>
+              <div class="empty__title">No candidates yet</div>
+              <div class="empty__text">Ask admin to add candidates for this election.</div>
+            </div>
+          {% else %}
+            <form method="POST" action="/vote" class="form">
+              <input type="hidden" name="election_id" value="{{ selected_id }}" />
 
-      <label>Candidate:</label>
-      <select name="candidate" required>
-        {% for c in candidates %}
-          <option value="{{ c }}">{{ c }}</option>
-        {% endfor %}
-      </select>
-      <br><br>
+              <label class="label">National ID</label>
+              <input class="input" name="national_id" placeholder="e.g., 111222333" required />
 
-      <button type="submit">Submit Vote</button>
-    </form>
-  {% endif %}
+              <label class="label">District (1 letter)</label>
+              <input class="input" name="district" value="A" maxlength="1" />
 
+              <label class="label">Candidate</label>
+              <select class="select" name="candidate" required>
+                {% for c in candidates %}
+                  <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+              </select>
+
+              <button class="btn btn--primary" type="submit">Submit Vote</button>
+
+              <div class="hint">
+                <!-- English notes -->
+                One vote per (National ID + Election). Duplicate voting is blocked by credential_hash.
+              </div>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/vote.js') }}"></script>
 </body>
 </html>
