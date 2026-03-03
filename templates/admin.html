@@ -7,29 +7,36 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <header class="topbar">
-    <div class="container topbar__inner">
-      <div class="brand">
-        <div class="brand__logo">
-  <img src="{{ url_for('static', filename='img/admin_icon.png') }}" 
-       alt="Logo" 
-       class="logo-img">
-</div>
-          <div class="brand__title">Admin Dashboard</div>
-          <div class="brand__sub">Create, open/close elections, manage candidates</div>
-        </div>
+<header class="topbar">
+  <div class="container topbar__inner">
+
+    <div class="brand">
+      <div class="brand__logo">
+        <img src="{{ url_for('static', filename='img/admin_icon.png') }}"
+             alt="Admin Logo"
+             class="logo-img">
       </div>
 
-      <nav class="nav">
-        <a class="nav__link nav__link--active" href="/admin?token={{ token }}{% if selected_id %}&election_id={{ selected_id }}{% endif %}">Admin</a>
-        {% if selected_id %}
-          <a class="nav__link" href="/results/{{ selected_id }}">Results</a>
-          <a class="nav__link" href="/vote?election_id={{ selected_id }}">Vote</a>
-        {% endif %}
-        <a class="nav__link" href="/">Home</a>
-      </nav>
+      <div>
+        <div class="brand__title">Admin Dashboard</div>
+        <div class="brand__sub">Create, open/close elections, manage candidates</div>
+      </div>
     </div>
-  </header>
+
+    <nav class="nav">
+      <a class="nav__link nav__link--active"
+         href="/admin?token={{ token }}{% if selected_id %}&election_id={{ selected_id }}{% endif %}">
+        Admin
+      </a>
+
+      {% if selected_id %}
+        <a class="nav__link" href="/results/{{ selected_id }}">Results</a>
+        <a class="nav__link" href="/vote?election_id={{ selected_id }}">Vote</a>
+      {% endif %}
+    </nav>
+
+  </div>
+</header>
 
   <main class="container">
     <section class="card">
