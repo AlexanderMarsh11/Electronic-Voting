@@ -251,6 +251,30 @@ def admin_page():
     cur.execute("SELECT id, title, status, ballot_open, ballot_close FROM elections ORDER BY id DESC")
     elections = cur.fetchall()
 
+    selected_id = request.args.get("election_id")
+    selected_id = int(selected_id) if selected_id else (elections[0]["id"] if elections else None)
+
+    selected_election = None
+    candidates = []
+    latest_results = None
+    latest_published_at = None
+
+    if selected_id:
+        cur.execute("SELECT id, title, status, ballot_open, ballot_close FROM elections WHERE id=%s", (selected_id,))
+        selected_election = cur.fetchone()
+
+        cur.execute("SELECT id, display_name FROM candidates WHERE election_id=%s ORDER BY id", (selected_id,))
+        candidates = cur.fetchall()
+
+        cur.execute(
+            "SELECT results_json, published_at FROM results WHERE election_id=%s ORDER BY published_at DESC LIMIT 1",
+            (selected_id,)
+        )
+        row = cur.fetchone()
+        if row:
+            latest_results = json.loads(row["results_json"])
+            latest_published_at = row["published_at"]
+
     cur.execute("SELECT COUNT(*) AS c FROM users")
     users_count = cur.fetchone()["c"]
 
@@ -260,10 +284,16 @@ def admin_page():
     return render_template(
         "admin.html",
         elections=elections,
+        selected_id=selected_id,
+        selected_election=selected_election,
+        candidates=candidates,
+        latest_results=latest_results,
+        latest_published_at=latest_published_at,
         users_count=users_count,
         votes_count=votes_count,
         token=request.args.get("token", "")
     )
+
 
 @app.post("/admin/elections/<int:election_id>/open")
 def admin_open_election(election_id: int):
@@ -431,6 +461,56 @@ def public_results(election_id: int):
     published_at = row["published_at"] if row else None
 
     return render_template("results.html", election=election, results=results, published_at=published_at)
+
+@app.post("/admin/elections/create")
+def admin_create_election():
+    require_admin()
+
+    title = (request.form.get("title") or "").strip()
+    scope = (request.form.get("scope") or "global").strip()  # global | district
+    district = (request.form.get("district") or "").strip()[:1] or None
+
+    if not title:
+        abort(400, "title required")
+    if scope not in ("global", "district"):
+        abort(400, "invalid scope")
+    if scope == "district" and not district:
+        abort(400, "district required for district-scope election")
+
+    now = now_utc()
+    filing_open = now
+    filing_close = now + dt.timedelta(days=1)
+    ballot_open = now
+    ballot_close = now + dt.timedelta(hours=2)
+
+    conn = db_conn()
+    cur = conn.cursor(dictionary=True)
+
+    # 1) Insert election row first (placeholder keys)
+    cur.execute(
+        """
+        INSERT INTO elections
+          (title, scope, district, filing_open, filing_close, ballot_open, ballot_close,
+           public_key_pem, private_key_path, status, created_at)
+        VALUES
+          (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        """,
+        (title, scope, district, filing_open, filing_close, ballot_open, ballot_close,
+         "PENDING", "PENDING", "draft", now)
+    )
+    election_id = cur.lastrowid
+
+    # 2) Generate keypair and update row
+    pub_pem, priv_path = generate_election_keypair(election_id)
+
+    cur.execute(
+        "UPDATE elections SET public_key_pem=%s, private_key_path=%s WHERE id=%s",
+        (pub_pem, priv_path, election_id)
+    )
+
+    token = request.args.get("token", "")
+    return redirect(url_for("admin_page", token=token, election_id=election_id))
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

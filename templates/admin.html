@@ -1,44 +1,98 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8"><title>Admin</title></head>
+<head>
+  <meta charset="utf-8">
+  <title>Admin</title>
+</head>
 <body>
 
 <nav style="margin-bottom: 16px;">
-  <a href="/admin?token={{ token }}">🛠️ Admin</a>
-  &nbsp;|&nbsp;
-  <a href="/admin/results/1?token={{ token }}">📊 Results (Admin)</a>
+  <a href="/admin?token={{ token }}{% if selected_id %}&election_id={{ selected_id }}{% endif %}">🛠️ Admin</a>
+  {% if selected_id %}
+    &nbsp;|&nbsp;
+    <a href="/admin/results/{{ selected_id }}?token={{ token }}">📊 Results (Admin)</a>
+    &nbsp;|&nbsp;
+    <a href="/results/{{ selected_id }}">🌐 Public Results</a>
+  {% endif %}
 </nav>
 <hr style="margin-bottom:16px;">
 
-  <h2>Admin Dashboard</h2>
-  <p>Users: <b>{{ users_count }}</b> | Votes: <b>{{ votes_count }}</b></p>
+<h2>Admin Dashboard</h2>
+<p>Users: <b>{{ users_count }}</b> | Votes: <b>{{ votes_count }}</b></p>
 
-  <h3>Elections</h3>
-  <ul>
+<h3>Create New Election</h3>
+<form method="POST" action="/admin/elections/create?token={{ token }}" style="margin-bottom:18px;">
+  <input type="text" name="title" placeholder="Election title" required>
+  <select name="scope">
+    <option value="global">global</option>
+    <option value="district">district</option>
+  </select>
+  <input type="text" name="district" placeholder="District (A)" maxlength="1">
+  <button type="submit">Create</button>
+</form>
+
+<h3>Select Election</h3>
+<form method="GET" action="/admin" style="margin-bottom:18px;">
+  <input type="hidden" name="token" value="{{ token }}">
+  <select name="election_id" onchange="this.form.submit()">
     {% for e in elections %}
-      <li>
-        <b>#{{ e.id }}</b> {{ e.title }} — <b>{{ e.status }}</b>
-        ({{ e.ballot_open }} → {{ e.ballot_close }})
-
-        <form style="display:inline" method="POST" action="/admin/elections/{{ e.id }}/open?token={{ token }}">
-          <button type="submit">Open (2h)</button>
-        </form>
-
-        <form style="display:inline" method="POST" action="/admin/elections/{{ e.id }}/close?token={{ token }}">
-          <button type="submit">Close + Tally</button>
-        </form>
-
-        <a href="/admin/results/{{ e.id }}?token={{ token }}">View Results</a>
-
-        <form method="POST" action="/admin/elections/{{ e.id }}/candidates/add?token={{ token }}" style="margin-top:8px;">
-          <input name="display_name" placeholder="Add candidate name..." />
-          <button type="submit">Add Candidate</button>
-        </form>
-      </li>
-      <hr/>
+      <option value="{{ e.id }}" {% if e.id == selected_id %}selected{% endif %}>
+        #{{ e.id }} - {{ e.title }} ({{ e.status }})
+      </option>
     {% endfor %}
-  </ul>
+  </select>
+  <noscript><button type="submit">Go</button></noscript>
+</form>
 
-  <p style="color:#666">Tip: open admin with <code>/admin?token=YOUR_ADMIN_TOKEN</code></p>
+{% if selected_election %}
+  <h3>Selected: #{{ selected_election.id }} - {{ selected_election.title }}</h3>
+  <p>Status: <b>{{ selected_election.status }}</b></p>
+  <p>Ballot: {{ selected_election.ballot_open }} → {{ selected_election.ballot_close }}</p>
+
+  <div style="margin: 12px 0;">
+    <form method="POST" action="/admin/elections/{{ selected_election.id }}/open?token={{ token }}" style="display:inline;">
+      <button type="submit">Open (2h)</button>
+    </form>
+
+    <form method="POST" action="/admin/elections/{{ selected_election.id }}/close?token={{ token }}" style="display:inline;">
+      <button type="submit">Close</button>
+    </form>
+
+    <form method="POST" action="/admin/elections/{{ selected_election.id }}/close?force=1&token={{ token }}" style="display:inline;">
+      <button type="submit">Force Recalculate</button>
+    </form>
+
+    <a href="/admin/results/{{ selected_election.id }}?token={{ token }}" style="margin-left:10px;">View Results</a>
+  </div>
+
+  <h4>Add Candidate</h4>
+  <form method="POST" action="/admin/elections/{{ selected_election.id }}/candidates/add?token={{ token }}" style="margin-bottom:16px;">
+    <input type="text" name="display_name" placeholder="Candidate name" required>
+    <button type="submit">Add</button>
+  </form>
+
+  <h4>Candidates</h4>
+  {% if candidates and candidates|length > 0 %}
+    <ul>
+      {% for c in candidates %}
+        <li>#{{ c.id }} - {{ c.display_name }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No candidates yet.</p>
+  {% endif %}
+
+  <h4>Latest Results Snapshot</h4>
+  {% if latest_results %}
+    <p><b>Published at:</b> {{ latest_published_at }}</p>
+    <pre style="white-space:pre-wrap;">{{ latest_results | tojson(indent=2) }}</pre>
+  {% else %}
+    <p>No results published yet.</p>
+  {% endif %}
+{% else %}
+  <p>No elections found. Create one above.</p>
+{% endif %}
+
+<p style="color:#666">Tip: open admin with <code>/admin?token=YOUR_ADMIN_TOKEN</code></p>
 </body>
 </html>
