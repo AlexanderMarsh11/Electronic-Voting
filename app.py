@@ -383,26 +383,27 @@ def admin_close_election(election_id: int):
 
     cur.execute("SELECT status, private_key_path FROM elections WHERE id=%s", (election_id,))
     election = cur.fetchone()
-
     if not election:
         abort(404, "Election not found")
 
-    # Allow recalculation when already closed
     force = request.args.get("force", "0") == "1"
     if election["status"] == "closed" and not force:
+        # If browser: go to results page instead of JSON
+        if request.accept_mimetypes.accept_html:
+            return redirect(url_for("admin_results", election_id=election_id, token=request.args.get("token", "")))
         return jsonify({"message": "already closed", "hint": "Add ?force=1 to recalculate"})
 
     private_key = load_election_private_key(election["private_key_path"])
 
-    # Valid candidates
+    # Candidates for this election
     cur.execute("SELECT display_name FROM candidates WHERE election_id=%s", (election_id,))
-    valid_names = {c["display_name"] for c in cur.fetchall()}
+    valid_names = {r["display_name"] for r in cur.fetchall()}
 
-    # Votes ciphertext
+    # Votes for this election
     cur.execute("SELECT ciphertext FROM votes WHERE election_id=%s", (election_id,))
     rows = cur.fetchall()
 
-    tally: dict[str, int] = {}
+    tally = {}
     invalid_votes = 0
 
     for r in rows:
@@ -419,33 +420,38 @@ def admin_close_election(election_id: int):
             invalid_votes += 1
 
     winner = max(tally, key=tally.get) if tally else None
-
     results = {
         "total_votes": len(rows),
         "valid_votes": sum(tally.values()),
         "invalid_votes": invalid_votes,
         "tally": tally,
-        "winner": winner
+        "winner": winner,
     }
 
-    # Required by your schema (NOT NULL)
     published_hashes = [hashlib.sha256(r["ciphertext"]).hexdigest() for r in rows]
+    published_at = now_utc()
 
     # Mark election closed
     cur.execute("UPDATE elections SET status='closed' WHERE id=%s", (election_id,))
 
-    # ✅ Save results safely: UPDATE first, INSERT if missing
-    now = now_utc()
+    # Upsert results (because results.election_id is UNIQUE)
     cur.execute(
-        "UPDATE results SET results_json=%s, published_hashes=%s, published_at=%s WHERE election_id=%s",
-        (json.dumps(results), json.dumps(published_hashes), now, election_id)
+        """
+        INSERT INTO results (election_id, results_json, published_hashes, published_at)
+        VALUES (%s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            results_json = VALUES(results_json),
+            published_hashes = VALUES(published_hashes),
+            published_at = VALUES(published_at)
+        """,
+        (election_id, json.dumps(results), json.dumps(published_hashes), published_at),
     )
-    if cur.rowcount == 0:
-        cur.execute(
-            "INSERT INTO results (election_id, results_json, published_hashes, published_at) VALUES (%s,%s,%s,%s)",
-            (election_id, json.dumps(results), json.dumps(published_hashes), now)
-        )
 
+    # If browser request => redirect to results page
+    if request.accept_mimetypes.accept_html:
+        return redirect(url_for("admin_results", election_id=election_id, token=request.args.get("token", "")))
+
+    # Otherwise (API/curl) => JSON
     return jsonify(results)
 
 @app.get("/admin/results/<int:election_id>")
