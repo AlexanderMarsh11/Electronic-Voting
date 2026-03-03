@@ -327,26 +327,29 @@ def admin_close_election(election_id: int):
     if not election:
         abort(404, "Election not found")
 
+    # Allow recalculation when already closed
     force = request.args.get("force", "0") == "1"
     if election["status"] == "closed" and not force:
         return jsonify({"message": "already closed", "hint": "Add ?force=1 to recalculate"})
 
     private_key = load_election_private_key(election["private_key_path"])
 
+    # Valid candidates
     cur.execute("SELECT display_name FROM candidates WHERE election_id=%s", (election_id,))
-    valid_names = set([c["display_name"] for c in cur.fetchall()])
+    valid_names = {c["display_name"] for c in cur.fetchall()}
 
+    # Votes ciphertext
     cur.execute("SELECT ciphertext FROM votes WHERE election_id=%s", (election_id,))
     rows = cur.fetchall()
 
-    tally = {}
+    tally: dict[str, int] = {}
     invalid_votes = 0
 
     for r in rows:
         try:
             plaintext = decrypt_vote_bundle(r["ciphertext"], private_key)
             vote_obj = json.loads(plaintext.decode())
-            candidate = vote_obj.get("candidate", "").strip()
+            candidate = (vote_obj.get("candidate") or "").strip()
 
             if candidate in valid_names:
                 tally[candidate] = tally.get(candidate, 0) + 1
@@ -365,10 +368,23 @@ def admin_close_election(election_id: int):
         "winner": winner
     }
 
+    # Required by your schema (NOT NULL)
     published_hashes = [hashlib.sha256(r["ciphertext"]).hexdigest() for r in rows]
 
+    # Mark election closed
     cur.execute("UPDATE elections SET status='closed' WHERE id=%s", (election_id,))
-    json.dumps(results),
+
+    # ✅ Save results safely: UPDATE first, INSERT if missing
+    now = now_utc()
+    cur.execute(
+        "UPDATE results SET results_json=%s, published_hashes=%s, published_at=%s WHERE election_id=%s",
+        (json.dumps(results), json.dumps(published_hashes), now, election_id)
+    )
+    if cur.rowcount == 0:
+        cur.execute(
+            "INSERT INTO results (election_id, results_json, published_hashes, published_at) VALUES (%s,%s,%s,%s)",
+            (election_id, json.dumps(results), json.dumps(published_hashes), now)
+        )
 
     return jsonify(results)
 
