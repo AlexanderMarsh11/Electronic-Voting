@@ -367,10 +367,7 @@ def admin_close_election(election_id: int):
     published_hashes = [hashlib.sha256(r["ciphertext"]).hexdigest() for r in rows]
 
     cur.execute("UPDATE elections SET status='closed' WHERE id=%s", (election_id,))
-    cur.execute(
-        "INSERT INTO results (election_id, results_json, published_hashes, published_at) VALUES (%s,%s,%s,%s)",
-        (election_id, json.dumps(results), json.dumps(published_hashes), now_utc())
-    )
+    json.dumps(results),
 
     return jsonify(results)
 
