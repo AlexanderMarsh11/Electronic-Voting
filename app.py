@@ -327,8 +327,9 @@ def admin_close_election(election_id: int):
     if not election:
         abort(404, "Election not found")
 
-    if election["status"] == "closed":
-        return jsonify({"message": "already closed"})
+    force = request.args.get("force", "0") == "1"
+    if election["status"] == "closed" and not force:
+        return jsonify({"message": "already closed", "hint": "Add ?force=1 to recalculate"})
 
     private_key = load_election_private_key(election["private_key_path"])
 
