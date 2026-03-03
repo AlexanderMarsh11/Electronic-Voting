@@ -2,8 +2,30 @@
 <html>
 <head><meta charset="utf-8"><title>Results</title></head>
 <body>
+
+    <nav style="margin-bottom: 16px;">
+  <a href="/admin?token={{ token }}&election_id={{ selected_id }}">🛠️ Admin</a>
+  &nbsp;|&nbsp;
+  <a href="/admin/results/{{ selected_id }}?token={{ token }}">📊 Results</a>
+  &nbsp;|&nbsp;
+  <a href="/vote?election_id={{ selected_id }}">🗳️ Vote Page</a>
+</nav>
+
+<hr style="margin-bottom:16px;">
+
+<label><b>Select election:</b></label>
+<select onchange="window.location.href='/admin/results/' + this.value + '?token={{ token }}'">
+  {% for e in elections %}
+    <option value="{{ e.id }}" {% if e.id == selected_id %}selected{% endif %}>
+      #{{ e.id }} - {{ e.title }} ({{ e.status }})
+    </option>
+  {% endfor %}
+</select>
+
+<hr style="margin:16px 0;">
+
 <nav style="margin-bottom: 16px;">
-  <a href="/vote?election_id={{ election.id }}">🗳️ Vote</a>
+  <a href="/results?election_id={{ election_id }}">📊 Results</a>
   &nbsp;|&nbsp;
   <a href="/results/{{ election.id }}">📊 Results</a>
 </nav>

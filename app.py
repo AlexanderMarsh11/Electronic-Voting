@@ -458,14 +458,22 @@ def admin_close_election(election_id: int):
 def admin_results(election_id: int):
     require_admin()
 
+    token = request.args.get("token", "")
+
     conn = db_conn()
     cur = conn.cursor(dictionary=True)
 
+    # Get list of elections for the dropdown
+    cur.execute("SELECT id, title, status FROM elections ORDER BY id DESC")
+    elections = cur.fetchall()
+
+    # Get the selected election
     cur.execute("SELECT id, title, status FROM elections WHERE id=%s", (election_id,))
     election = cur.fetchone()
     if not election:
         abort(404, "Election not found")
 
+    # Get latest results snapshot for this election
     cur.execute(
         "SELECT results_json, published_at FROM results WHERE election_id=%s ORDER BY published_at DESC LIMIT 1",
         (election_id,)
@@ -475,7 +483,15 @@ def admin_results(election_id: int):
     results = json.loads(row["results_json"]) if row else None
     published_at = row["published_at"] if row else None
 
-    return render_template("results.html", election=election, results=results, published_at=published_at)
+    return render_template(
+        "results.html",
+        election=election,
+        results=results,
+        published_at=published_at,
+        elections=elections,        # ✅ for dropdown
+        selected_id=election_id,    # ✅ currently viewed election
+        token=token                # ✅ keep token in navigation
+    )
 
 @app.get("/results/<int:election_id>")
 def public_results(election_id: int):
@@ -547,6 +563,48 @@ def admin_create_election():
     token = request.args.get("token", "")
     return redirect(url_for("admin_page", token=token, election_id=election_id))
 
+@app.get("/results")
+def results_picker():
+    election_id = request.args.get("election_id")
+
+    conn = db_conn()
+    cur = conn.cursor(dictionary=True)
+
+    # list elections for dropdown
+    cur.execute("SELECT id, title, status FROM elections ORDER BY id DESC")
+    elections = cur.fetchall()
+
+    # default election = latest if not provided
+    if not election_id and elections:
+        election_id = str(elections[0]["id"])
+
+    if not election_id:
+        return render_template("results_public.html", elections=[], election=None, results=None, published_at=None)
+
+    election_id_int = int(election_id)
+
+    cur.execute("SELECT id, title, status FROM elections WHERE id=%s", (election_id_int,))
+    election = cur.fetchone()
+    if not election:
+        abort(404, "Election not found")
+
+    cur.execute(
+        "SELECT results_json, published_at FROM results WHERE election_id=%s ORDER BY published_at DESC LIMIT 1",
+        (election_id_int,)
+    )
+    row = cur.fetchone()
+
+    results = json.loads(row["results_json"]) if row else None
+    published_at = row["published_at"] if row else None
+
+    return render_template(
+        "results_public.html",
+        elections=elections,
+        election=election,
+        results=results,
+        published_at=published_at,
+        selected_election_id=election_id_int,
+    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
