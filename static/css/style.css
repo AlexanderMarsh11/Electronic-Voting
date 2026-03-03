@@ -127,13 +127,13 @@ body{
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: rgba(255,255,255,.06);
+  background: rgba(32, 34, 71, 0.062);
   color: var(--text);
   outline:none;
 }
 .input:focus, .select:focus{
   border-color: rgba(110,168,255,.55);
-  box-shadow: 0 0 0 3px rgba(110,168,255,.14);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.14);
 }
 
 .btn{
