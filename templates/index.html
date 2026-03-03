@@ -1,87 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Electronic Voting System - RMU</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- CSS محلي -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta charset="utf-8" />
+  <title>Secure Vote</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-
-<div class="navbar">
-    <h2>RMU E-Voting</h2>
-    <div>
-        <a onclick="show('home')">Home</a>
-        <a onclick="show('register')">Register</a>
-        <a onclick="show('login')">Login</a>
-        <a onclick="show('dashboard')">Dashboard</a>
-        <a onclick="show('admin')">Admin</a>
-    </div>
-</div>
-
-<!-- HOME -->
-<section id="home" class="active hero">
-    <h1>Secure Electronic Voting</h1>
-    <p>Anonymous • Verifiable • Cryptographically Secure</p>
-
-    <button class="btn btn-secondary" onclick="show('register')">Create Account</button>
-    <button class="btn btn-primary" onclick="show('login')">Login</button>
-
-    <div class="cards">
-        <div class="card">
-            <i class="fa-solid fa-lock"></i>
-            <h3>Secure Voting</h3>
-            <p>Asymmetric cryptography + hashing</p>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__logo">🗳️</div>
+        <div>
+          <div class="brand__title">Secure Vote</div>
+          <div class="brand__sub">Simple university demo (Flask + MySQL + Crypto)</div>
         </div>
-        <div class="card">
-            <i class="fa-solid fa-user-secret"></i>
-            <h3>Anonymous</h3>
-            <p>Private key based identity</p>
+      </div>
+      <nav class="nav">
+        <a class="nav__link" href="/vote">Vote</a>
+        <a class="nav__link" href="/results/1">Results</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card hero">
+      <h1 class="h1">Welcome</h1>
+      <p class="muted">
+        Use the Vote page to submit an encrypted ballot. Use Results to view tallies once the election is closed.
+      </p>
+
+      <div class="grid grid--2">
+        <div class="card card--soft">
+          <h2 class="h2">Voters</h2>
+          <p class="muted">Choose an election and cast your vote.</p>
+          <a class="btn btn--primary" href="/vote">Go to Vote</a>
         </div>
-        <div class="card">
-            <i class="fa-solid fa-square-poll-vertical"></i>
-            <h3>Verifiable Results</h3>
-            <p>Hash verification & audit trail</p>
+
+        <div class="card card--soft">
+          <h2 class="h2">Admin</h2>
+          <p class="muted">Admin dashboard requires token.</p>
+
+          <!-- Admin shortcut: just builds a URL with token -->
+          <form class="row" onsubmit="return goAdmin(event)">
+            <input class="input" id="adminToken" placeholder="Paste ADMIN token..." />
+            <button class="btn" type="submit">Open Admin</button>
+          </form>
+
+          <div class="hint">
+         
+            Tip: admin URL format is <code>/admin?token=YOUR_ADMIN_TOKEN</code>.
+          </div>
         </div>
-    </div>
-</section>
+      </div>
+    </section>
+  </main>
 
-<!-- REGISTER -->
-<section id="register">
-    <div class="form-box">
-        <h2>Create Account</h2>
-        <input placeholder="National ID">
-        <input placeholder="District (Auto Assigned)" disabled>
-        <button class="btn btn-primary">Generate PPK</button>
-    </div>
-</section>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script>
 
-<!-- LOGIN -->
-<section id="login">
-    <div class="form-box">
-        <h2>Login</h2>
-        <input placeholder="Upload PPK File">
-        <button class="btn btn-primary">Login</button>
-    </div>
-</section>
-
-<!-- DASHBOARD -->
-<section id="dashboard">
-    <h2>User Dashboard</h2>
-</section>
-
-<!-- ADMIN -->
-<section id="admin">
-    <h2>Administrator Panel</h2>
-</section>
-
-<footer>
-    © 2026 Robert Morris University – Cryptography Project
-</footer>
-
-<!-- JS محلي -->
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    // Build /admin?token=... to make it easy for a demo.
+    function goAdmin(e) {
+      e.preventDefault();
+      const t = (document.getElementById('adminToken').value || '').trim();
+      if (!t) { alert('Please paste admin token'); return false; }
+      window.location.href = `/admin?token=${encodeURIComponent(t)}`;
+      return false;
+    }
+  </script>
 </body>
 </html>
