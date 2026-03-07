@@ -455,9 +455,9 @@ def admin_close_election(election_id: int):
 
     # If browser request => redirect to results page
     if request.accept_mimetypes.accept_html:
-        return redirect(url_for("admin_results", election_id=election_id, token=request.args.get("token", "")))
+        return redirect(url_for("public_results", election_id=election_id))
 
-    # Otherwise (API/curl) => JSON
+    
     return jsonify(results)
 
 
