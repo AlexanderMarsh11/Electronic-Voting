@@ -186,7 +186,12 @@ def vote_page():
 
 @app.post("/vote")
 def vote_submit():
-    election_id = int(request.form.get("election_id", "0"))
+    election_id_raw = (request.form.get("election_id") or "").strip()
+
+    if not election_id_raw.isdigit():
+        abort(400, "Invalid or missing election_id")
+
+    election_id = int(election_id_raw)
     national_id = (request.form.get("national_id") or "").strip()
     district = (request.form.get("district") or "A").strip()[:1]
     candidate = (request.form.get("candidate") or "").strip()
@@ -454,44 +459,6 @@ def admin_close_election(election_id: int):
     # Otherwise (API/curl) => JSON
     return jsonify(results)
 
-@app.get("/admin/results/<int:election_id>")
-def admin_results(election_id: int):
-    require_admin()
-
-    token = request.args.get("token", "")
-
-    conn = db_conn()
-    cur = conn.cursor(dictionary=True)
-
-    # Get list of elections for the dropdown
-    cur.execute("SELECT id, title, status FROM elections ORDER BY id DESC")
-    elections = cur.fetchall()
-
-    # Get the selected election
-    cur.execute("SELECT id, title, status FROM elections WHERE id=%s", (election_id,))
-    election = cur.fetchone()
-    if not election:
-        abort(404, "Election not found")
-
-    # Get latest results snapshot for this election
-    cur.execute(
-        "SELECT results_json, published_at FROM results WHERE election_id=%s ORDER BY published_at DESC LIMIT 1",
-        (election_id,)
-    )
-    row = cur.fetchone()
-
-    results = json.loads(row["results_json"]) if row else None
-    published_at = row["published_at"] if row else None
-
-    return render_template(
-        "results.html",
-        election=election,
-        results=results,
-        published_at=published_at,
-        elections=elections,        # ✅ for dropdown
-        selected_id=election_id,    # ✅ currently viewed election
-        token=token                # ✅ keep token in navigation
-    )
 
 @app.get("/results/<int:election_id>")
 def public_results(election_id: int):
