@@ -87,7 +87,7 @@
             </div>
           {% else %}
             <form method="POST" action="/vote" class="form">
-              <input type="hidden" name="election_id" value="{{ selected_id }}" />
+              <input type="hidden" name="election_id" value="{{ election.id }}" /> />
 
               <label class="label">National ID</label>
               <input class="input" name="national_id" placeholder="e.g., 111222333" required />
