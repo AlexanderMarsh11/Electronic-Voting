@@ -395,7 +395,7 @@ def admin_close_election(election_id: int):
     if election["status"] == "closed" and not force:
         # If browser: go to results page instead of JSON
         if request.accept_mimetypes.accept_html:
-            return redirect(url_for("admin_results", election_id=election_id, token=request.args.get("token", "")))
+            return redirect(url_for("public_results", election_id=election_id))
         return jsonify({"message": "already closed", "hint": "Add ?force=1 to recalculate"})
 
     private_key = load_election_private_key(election["private_key_path"])
