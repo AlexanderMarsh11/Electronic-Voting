@@ -24,7 +24,7 @@
       <nav class="nav">
         <a class="nav__link nav__link--active" href="/vote">Vote</a>
         <!-- Results link updates by JS when election changes -->
-        <a class="nav__link" id="resultsLink" href="/results/{{ selected_id or 1 }}">Results</a>
+        <a class="nav__link" id="resultsLink" href="/results/{{ election.id }}">Results</a>
         
       </nav>
     </div>
@@ -42,7 +42,7 @@
           <label class="label">Select Election</label>
           <select class="select" id="electionSelect">
             {% for e in elections %}
-              <option value="{{ e.id }}" {% if e.id == selected_id %}selected{% endif %}>
+              <option value="{{ e.id }}" {% if e.id == election.id %}selected{% endif %}>
                 #{{ e.id }} — {{ e.title }} ({{ e.status }})
               </option>
             {% endfor %}
@@ -57,7 +57,7 @@
           <h2 class="h2">Election</h2>
           <div class="kv">
             <div class="kv__k">Title</div><div class="kv__v">{{ election.title }}</div>
-            <div class="kv__k">ID</div><div class="kv__v">{{ selected_id }}</div>
+            <div class="kv__k">ID</div><div class="kv__v">{{ election.id }}</div>
             <div class="kv__k">Status</div>
             <div class="kv__v">
               <span class="pill pill--{{ election.status }}">{{ election.status }}</span>

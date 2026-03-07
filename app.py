@@ -181,6 +181,7 @@ def vote_page():
         election=election,
         election_id=election_id,
         elections=elections,   # Used for the election dropdown menu
+        selected_id=election_id,
         candidates=candidates
     )
 
